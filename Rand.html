@@ -1,0 +1,115 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "description": "Interactive layered and concatenated charts with an adjustable mean line.",
+  "data": {
+    "url": "https://raw.githubusercontent.com/sheriefAbdallah/CS318/refs/heads/main/Traffic_Incidents.csv",
+    "format": {"type": "csv"}
+  },
+  "transform": [
+    {
+      "calculate": "timeParse(datum.acci_time, '%d/%m/%Y %H:%M:%S')",
+      "as": "parsed_time"
+    },
+    {
+      "calculate": "timeFormat(datum.parsed_time, '%m')",
+      "as": "Month"
+    },
+    {
+      "calculate": "timeFormat(datum.parsed_time, '%H')",
+      "as": "HourOfDay"
+    },
+    {
+      "calculate": "timeFormat(datum.parsed_time, '%A')",
+      "as": "DayOfWeek"
+    }
+  ],
+  "params": [
+    {
+      "name": "meanThreshold",
+      "value": 10,
+      "bind": {
+        "input": "range",
+        "min": 0,
+        "max": 200,
+        "step": 1,
+        "name": "Adjust Mean Line: "
+      }
+    }
+  ],
+  "vconcat": [
+    {
+      "layer": [
+        {
+          "mark": "bar",
+          "encoding": {
+            "x": {
+              "field": "Month",
+              "type": "ordinal",
+              "title": "Month of the Year"
+            },
+            "y": {
+              "aggregate": "mean",
+              "field": "acci_id",
+              "type": "quantitative",
+              "title": "Average Number of Incidents"
+            },
+            "tooltip": [
+              {"field": "Month", "type": "ordinal", "title": "Month"},
+              {
+                "aggregate": "mean",
+                "field": "acci_id",
+                "type": "quantitative",
+                "title": "Average Incidents"
+              }
+            ]
+          }
+        },
+        {
+          "mark": "rule",
+          "encoding": {
+            "y": {
+              "value": {"expr": "meanThreshold"},
+              "type": "quantitative",
+              "title": "Threshold"
+            },
+            "color": {"value": "red"},
+            "size": {"value": 4},
+            "tooltip": [
+              {"value": {"expr": "meanThreshold"}, "title": "Current Mean Threshold"}
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "mark": {
+        "type": "point",
+        "tooltip": true
+      },
+      "encoding": {
+        "x": {
+          "field": "HourOfDay",
+          "type": "quantitative",
+          "bin": true,
+          "title": "Hour of the Day"
+        },
+        "y": {
+          "field": "DayOfWeek",
+          "type": "nominal",
+          "title": "Day of the Week",
+          "sort": ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+        },
+        "size": {
+          "aggregate": "count",
+          "type": "quantitative",
+          "title": "Number of Incidents"
+        },
+        "tooltip": [
+          {"field": "HourOfDay", "type": "quantitative", "title": "Hour (Binned)"},
+          {"field": "DayOfWeek", "type": "nominal", "title": "Day"},
+          {"aggregate": "count", "type": "quantitative", "title": "Incident Count"}
+        ]
+      }
+    }
+  ]
+}
