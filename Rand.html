@@ -3,21 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Interactive Accident Data Dashboard</title>
-  <script src="https://cdn.jsdelivr.net/npm/vega@5.21.0"></script>
-  <script src="https://cdn.jsdelivr.net/npm/vega-lite@5.3.0"></script>
-  <script src="https://cdn.jsdelivr.net/npm/vega-embed@6.21.0"></script>
+  <title>Interactive Bar and Circle Chart</title>
+  <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
 </head>
 <body>
-
-  <h1>Interactive Accident Data Dashboard</h1>
-
   <div id="vis"></div>
-
-  <script>
+  <script type="text/javascript">
     const spec = {
       "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-      "description": "Interactive layered and concatenated charts with an adjustable mean line.",
+      "description": "Interactive bar chart and circle chart where clicking on a bar filters the second chart.",
       "data": {
         "url": "https://raw.githubusercontent.com/sheriefAbdallah/CS318/refs/heads/main/Traffic_Incidents.csv",
         "format": {"type": "csv"}
@@ -40,69 +36,57 @@
           "as": "DayOfWeek"
         }
       ],
-      "params": [
-        {
-          "name": "meanThreshold",
-          "value": 10,
-          "bind": {
-            "input": "range",
-            "min": 0,
-            "max": 200,
-            "step": 1,
-            "name": "Adjust Mean Line: "
-          }
-        }
-      ],
       "vconcat": [
         {
-          "layer": [
-            {
-              "mark": "bar",
-              "encoding": {
-                "x": {
-                  "field": "Month",
-                  "type": "ordinal",
-                  "title": "Month of the Year"
-                },
-                "y": {
-                  "aggregate": "mean",
-                  "field": "acci_id",
-                  "type": "quantitative",
-                  "title": "Average Number of Incidents"
-                },
-                "tooltip": [
-                  {"field": "Month", "type": "ordinal", "title": "Month"},
-                  {
-                    "aggregate": "mean",
-                    "field": "acci_id",
-                    "type": "quantitative",
-                    "title": "Average Incidents"
-                  }
-                ]
-              }
-            },
-            {
-              "mark": "rule",
-              "encoding": {
-                "y": {
-                  "value": {"expr": "meanThreshold"},
-                  "type": "quantitative",
-                  "title": "Threshold"
-                },
-                "color": {"value": "red"},
-                "size": {"value": 4},
-                "tooltip": [
-                  {"value": {"expr": "meanThreshold"}, "title": "Current Mean Threshold"}
-                ]
-              }
+          "mark": "bar",
+          "selection": {
+            "barSelect": {
+              "type": "single",
+              "fields": ["Month"]
             }
-          ]
+          },
+          "encoding": {
+            "x": {
+              "field": "Month",
+              "type": "ordinal",
+              "title": "Month of the Year"
+            },
+            "y": {
+              "aggregate": "count",
+              "field": "acci_id",
+              "type": "quantitative",
+              "title": "Number of Incidents"
+            },
+            "color": {
+              "condition": {
+                "selection": "barSelect",
+                "value": "steelblue"
+              },
+              "value": "lightgray"
+            },
+            "tooltip": [
+              {"field": "Month", "type": "ordinal", "title": "Month"},
+              {
+                "aggregate": "count",
+                "field": "acci_id",
+                "type": "quantitative",
+                "title": "Incident Count"
+              }
+            ]
+          }
         },
         {
           "mark": {
-            "type": "point",
+            "type": "circle",
             "tooltip": true
           },
+          "transform": [
+            {
+              "filter": {
+                "selection": "barSelect"
+              }
+            }
+          ],
           "encoding": {
             "x": {
               "field": "HourOfDay",
@@ -121,6 +105,11 @@
               "type": "quantitative",
               "title": "Number of Incidents"
             },
+            "color": {
+              "field": "DayOfWeek",
+              "type": "nominal",
+              "legend": {"title": "Day"}
+            },
             "tooltip": [
               {"field": "HourOfDay", "type": "quantitative", "title": "Hour (Binned)"},
               {"field": "DayOfWeek", "type": "nominal", "title": "Day"},
@@ -131,8 +120,8 @@
       ]
     };
 
-    vegaEmbed('#vis', spec);
+    vegaEmbed('#vis', spec).catch(console.error);
   </script>
-
 </body>
 </html>
+
